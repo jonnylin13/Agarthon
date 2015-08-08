@@ -104,20 +104,12 @@ class session:
 
     # Specifically passes socket arg because must send connection token immediately after connection?
     def send_connection_token(self, socket):
-        token_pack = bytes(self.token, 'utf-8')
+        # token_pack = bytes(self.token, 'utf-8')
         try:
-            socket.send(token_pack, 80)
+            # socket.send(token_pack, 80)
             print('Connection token sent!')
         except Exception as ex:
             print('Could not send connection token for reason: ' + str(ex))
-
-class packet():
-
-    def __init__(self, input=bytearray(), output=bytearray()):
-        self.input = input
-        self.output = output
-
-    def
 
 
 
