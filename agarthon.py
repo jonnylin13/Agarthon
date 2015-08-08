@@ -15,7 +15,7 @@ class main:
         self.regions = self.get_regions()
         self.server_info = self.get_server_info()
 
-        self.session = session(self.server_info)
+        self.session = session.session(self.server_info)
 
     # Returns the server information ip:port\nauth_key
     def get_server_info(self):
