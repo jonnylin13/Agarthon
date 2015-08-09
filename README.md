@@ -5,7 +5,7 @@ An agar.io python client made in Python 3.4.3. I will be improving this as my ma
 # Disclaimer
 
 I have pretty much no idea what I'm doing, this is my first personal project so I would love help/tips/feedback!
-** Also big thanks to Raeon for helping me through a lot of the packet packing/unpacking! **
+- Also big thanks to Raeon for helping me through a lot of the packet packing/unpacking!
 
 # Dependencies
 - `pip install requests`
