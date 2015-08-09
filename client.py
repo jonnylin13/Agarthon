@@ -1,6 +1,6 @@
 __author__ = 'jono'
 
-import session, world, gameview
+import session, world, gameview, packet
 # Needed for game_version reconnect opcode 255
 game_version = 154669603
 protocol_version = 5
@@ -9,13 +9,15 @@ c2s_opcodes = {'protocol_handshake':254, 'game_version_handshake':255, 'token':8
                'set_nickname':0, 'spectate':1, 'mouse_move':16, 'split':17, 'q_pressed':18,
                'q_released':19, 'eject_mass':21}
 s2c_opcodes = {16:'world_update', 17:'view_update', 20:'reset', 21:'draw_debug_line', 32:'owns_blob',
-               'ffa_leaderboard':49}
+               'ffa_leaderboard':49, 'game_area_size':64, 'blob_experience_info':81}
 
 
 class Client:
 
-    def __init__(self, agarthon):
+    def __init__(self, agarthon, client_id):
+        self.client_id = client_id
         self.main = agarthon
+        self.packet = packet.Packet()
         self.session = session.Session(self.main)
         self.session.start()
         self.world = world.World()
@@ -26,6 +28,11 @@ class Client:
 
     def start(self):
         self.send_handshake()
+
+    def stop(self):
+        self.world.stop()
+        self.session.disconnect()
+        self.gameview.stop()
 
     def parse_packets(self):
         for packet in self.session.data_in:
@@ -46,53 +53,57 @@ class Client:
                 self.owns_blob()
             elif s2c_opcodes[opcode] == 'ffa_leaderboard':
                 self.ffa_leaderboard()
+            elif s2c_opcodes[opcode] == 'blob_experience_info':
+                self.blob_experience_info()
+            else:
+                print('Could not handle packet with opcode: ' + str(opcode))
 
             # Clears packet.input for the next iteration
             self.packet.clear_input()
 
     def world_update(self):
-        count_eats = self.main.packet.read_uint16()
+        count_eats = self.packet.read_uint16()
         # Dictionary stores by key=eater_id value=victim_id THESE ARE BLOB EVENTS
         eats = {}
         for x in range(0, count_eats):
-            eater_id = self.main.packet.read_uint32()
-            victim_id = self.main.packet.read_uint32()
+            eater_id = self.packet.read_uint32()
+            victim_id = self.packet.read_uint32()
             eats[eater_id] = victim_id
         # blobs is a dict with key=player_id and value=a tuple with player information
         blobs = {}
         # Next block is sent until player id is 0
         while True:
-            player_id = self.main.packet.read_uint32()
+            player_id = self.packet.read_uint32()
             if player_id == 0:
                 break
-            x = self.main.packet.read_uint32()
-            y = self.main.packet.read_uint32()
-            size = self.main.packet.read_uint16()
-            r = self.main.packet.read_uint16()
-            g = self.main.packet.read_uint16()
-            b = self.main.packet.read_uint16()
-            byte = self.main.packet.read_uint8()
+            x = self.packet.read_uint32()
+            y = self.packet.read_uint32()
+            size = self.packet.read_uint16()
+            r = self.packet.read_uint16()
+            g = self.packet.read_uint16()
+            b = self.packet.read_uint16()
+            byte = self.packet.read_uint8()
             is_virus = byte & 0
             # Assuming this is for agitated viruses?
             is_agitated = byte & 4
             if byte & 1:
-                self.main.packet.skip(4)
+                self.packet.skip(4)
             elif byte & 2:
                 # Blob has a skin - just skip
-                skin_uri = self.main.packet.read_str8()
-            name = self.main.packet.read_str16()
+                skin_uri = self.packet.read_str8()
+            name = self.packet.read_str16()
             blobs[player_id] = (x, y, size, r, g, b, is_virus, is_agitated, skin_uri, name)
         # Loop amt of removals, store in list of player_ids to remove
-        count_removals = self.main.packet.read_uint32()
+        count_removals = self.packet.read_uint32()
         removals = []
         for x in range(0, count_removals):
-            removals.append(self.main.packet.read_uint32())
+            removals.append(self.packet.read_uint32())
         self.world.update(eats, blobs, removals)
 
     def view_update(self):
-        view_x = self.main.packet.read_float32()
-        view_y = self.main.packet.read_float32()
-        view_zoom = self.main.packet.read_float32()
+        view_x = self.packet.read_float32()
+        view_y = self.packet.read_float32()
+        view_zoom = self.packet.read_float32()
         self.gameview.update(view_x, view_y, view_zoom)
 
     def reset(self):
@@ -100,44 +111,49 @@ class Client:
         print('Reset sent from server to client!')
 
     def draw_debug_line(self):
-        line_x = self.main.packet.read_uint16
-        liny_y = self.main.packet.read_uint16
-        self.gameview.draw_debug_line()
+        line_x = self.packet.read_uint16
+        line_y = self.packet.read_uint16
+        self.gameview.draw_debug_line(line_x, line_y)
 
     # Sent when respawned or split - updates the player's blobs
     def owns_blob(self):
-        blob_id = self.main.packet.read_uint32()
+        blob_id = self.packet.read_uint32()
         self.world.update_player_blobs(blob_id)
 
     def ffa_leaderboard(self):
-        count = self.main.packet.read_uint32()
+        count = self.packet.read_uint32()
         blobs = {}
         for x in range(0, count):
-            blob_id = self.main.packet.read_uint32()
-            name = self.main.packet.read_str16()
+            blob_id = self.packet.read_uint32()
+            name = self.packet.read_str16()
             blobs[blob_id] = name
         self.gameview.update_ffa_leaderboard(blobs)
 
-    # Sent when joining a server world
+    # Player EXP info
+    def blob_experience_info(self):
+        level = self.packet.read_uint32()
+        current_xp = self.packet.read_uint32()
+        next_xp = self.packet.read_uint32()
+        self.world.update_player_exp(level, current_xp, next_xp)
 
     # Specifically passes socket arg because must send connection token immediately after connection?
     def send_handshake(self):
         try:
 
             # send protocol version
-            self.main.packet.write_uint8(c2s_opcodes['protocol_handshake'])
-            self.main.packet.write_uint32(protocol_version)
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['protocol_handshake'])
+            self.packet.write_uint32(protocol_version)
+            self.packet.flush_session(self.session)
 
             # send game version
-            self.main.packet.write_uint8(c2s_opcodes['game_version_handshake'])
-            self.main.packet.write_uint32(game_version)
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['game_version_handshake'])
+            self.packet.write_uint32(game_version)
+            self.packet.flush_session(self.session)
 
             # send connection token
-            self.main.packet.write_uint8(c2s_opcodes['token'])
-            self.main.packet.write_string(self.session.token)
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['token'])
+            self.packet.write_string(self.session.token)
+            self.packet.flush_session(self.session)
 
             print('Connection token sent!')
         except Exception as ex:
@@ -145,54 +161,54 @@ class Client:
 
     def send_set_nickname(self, name):
         try:
-            self.main.packet.write_uint8(c2s_opcodes['set_nickname'])
-            self.main.packet.write_string(name)
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['set_nickname'])
+            self.packet.write_string(name)
+            self.packet.flush_session(self.session)
         except Exception as ex:
             print('Could not send set_nickname for reason: ' + str(ex))
 
     def send_spectate(self):
         try:
-            self.main.packet.write_uint8(c2s_opcodes['spectate'])
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['spectate'])
+            self.packet.flush_session(self.session)
         except Exception as ex:
             print('Could not send spectate for reason: ' + str(ex))
 
     def send_mouse_move(self, mouse_x, mouse_y, node_id):
         try:
-            self.main.packet.write_uint8(c2s_opcodes['mouse_move'])
-            self.main.packet.write_float64(mouse_x)
-            self.main.packet.write_float64(mouse_y)
-            self.main.packet.write_uint32(node_id)
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['mouse_move'])
+            self.packet.write_float64(mouse_x)
+            self.packet.write_float64(mouse_y)
+            self.packet.write_uint32(node_id)
+            self.packet.flush_session(self.session)
         except Exception as ex:
             print('Could not send mouse_move for reason: ' + str(ex))
 
     def send_split(self):
         try:
-            self.main.packet.write_uint8(c2s_opcodes['split'])
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['split'])
+            self.packet.flush_session(self.session)
         except Exception as ex:
             print('Could not send send_split for reason: ' + str(ex))
 
     def send_q_pressed(self):
         try:
-            self.main.packet.write_uint8(c2s_opcodes['q_pressed'])
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['q_pressed'])
+            self.packet.flush_session(self.session)
         except Exception as ex:
             print('Could not send q_pressed for reason: ' + str(ex))
 
     def send_q_released(self):
         try:
-            self.main.packet.write_uint8(c2s_opcodes['q_released'])
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['q_released'])
+            self.packet.flush_session(self.session)
         except Exception as ex:
             print('Could not send q_released for reason: ' + str(ex))
 
     def send_eject_mass(self):
         try:
-            self.main.packet.write_uint8(c2s_opcodes['eject_mass'])
-            self.main.packet.flush_session(self.session)
+            self.packet.write_uint8(c2s_opcodes['eject_mass'])
+            self.packet.flush_session(self.session)
         except Exception as ex:
             print('Could not send eject_mass for reason: ' + str(ex))
 

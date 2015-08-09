@@ -13,3 +13,9 @@ class World:
         if blob_id not in self.player_blobs:
             self.player_blobs.append(blob_id)
 
+    def update_player_exp(self, level, current_xp, next_xp):
+        print()
+
+    def stop(self):
+        print()
+

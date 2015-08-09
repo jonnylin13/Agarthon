@@ -15,3 +15,6 @@ class GameView:
 
     def update_ffa_leaderboard(self, blobs):
         self.scoreboard = blobs
+
+    def stop(self):
+        print()

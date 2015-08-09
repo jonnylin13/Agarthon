@@ -1,6 +1,6 @@
 __author__ = 'jono'
 
-import requests, random, packet, client
+import requests, random, client
 
 url = 'http://m.agar.io'
 gamemodes = ('ffa', 'party', 'experimental', 'teams')
@@ -13,11 +13,18 @@ class Agarthon:
         self.regions = self.get_regions()
         self.server_info = self.get_server_info()
 
-        self.packet = packet.Packet()
+        self.clients = {}
 
+    def add_client(self):
         # Starts a client - change this in the future
-        self.client = client.Client(self)
-        self.client.start()
+        client_id = len(self.clients.keys())
+        c = client.Client(self, client_id)
+        self.c.start()
+        self.clients[c] = c
+
+    def remove_client(self, id):
+        self.clients[id].stop()
+        del(self.client[id])
 
     # Returns the server information ip:port\nauth_key
     def get_server_info(self):

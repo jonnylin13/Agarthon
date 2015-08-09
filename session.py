@@ -42,7 +42,6 @@ class Session:
                 if self.ws.connected:
                     data = self.ws.recv()
                     self.data_in.append(data)
-                    print(self.data_in)
                 else:
                     print('Could not receive data because there is no websocket connection!')
                     return
