@@ -3,8 +3,6 @@ __author__ = 'jono'
 import requests, random, session, packet
 
 url = 'http://m.agar.io'
-# version number no longer needed?
-version_number = '154669603'
 gamemodes = ('ffa', 'party', 'experimental', 'teams')
 
 
