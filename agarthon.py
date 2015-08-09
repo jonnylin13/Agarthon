@@ -1,6 +1,6 @@
 __author__ = 'jono'
 
-import requests, random, session
+import requests, random, session, packet
 
 url = 'http://m.agar.io'
 # version number no longer needed?
@@ -15,7 +15,9 @@ class main:
         self.regions = self.get_regions()
         self.server_info = self.get_server_info()
 
-        self.session = session.session(self.server_info)
+        self.packet = packet.packet()
+
+        self.session = session.session(self)
 
     # Returns the server information ip:port\nauth_key
     def get_server_info(self):
@@ -53,11 +55,8 @@ class main:
 
     # Set input for gamemode here
     def get_gamemode(self):
-        # For now, hardcode
+        # For now just ffa
         return gamemodes[0]
-
-
-
 
 main()
 
