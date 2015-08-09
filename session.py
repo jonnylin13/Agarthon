@@ -13,6 +13,8 @@ class Session:
         self.data_in = []
         self.running = False
 
+        self.thread = None
+
         # Receive loop starts on self.connect() call which instantiates ws
         self.ws = None
 

@@ -28,6 +28,7 @@ class Client:
 
     def start(self):
         self.send_handshake()
+        self.gameview.start()
 
     def stop(self):
         self.world.stop()
@@ -55,6 +56,8 @@ class Client:
                 self.ffa_leaderboard()
             elif s2c_opcodes[opcode] == 'blob_experience_info':
                 self.blob_experience_info()
+            elif s2c_opcodes[opcode] == 'game_area_size':
+                self.game_size()
             else:
                 print('Could not handle packet with opcode: ' + str(opcode))
 
@@ -135,6 +138,13 @@ class Client:
         current_xp = self.packet.read_uint32()
         next_xp = self.packet.read_uint32()
         self.world.update_player_exp(level, current_xp, next_xp)
+
+    def game_size(self):
+        min_x = self.packet.read_float64()
+        min_y = self.packet.read_float64()
+        max_x = self.packet.read_float64()
+        max_y = self.packet.read_float64()
+
 
     # Specifically passes socket arg because must send connection token immediately after connection?
     def send_handshake(self):
