@@ -2,25 +2,22 @@ __author__ = 'jono'
 
 import websocket, threading
 
-# Needed for game_version reconnect opcode 255
-game_version = 154669603
-
 class session:
 
-    def __init__(self, main):
+    def __init__(self, agarthon):
 
-        self.main = main
+        self.main = agarthon
 
         self.ip, self.port = self.main.server_info[0].split(':')
         self.token = self.main.server_info[1]
         self.data_in = []
         self.running = False
 
-        # Receive loop starts on self.connect() call
+        # Receive loop starts on self.connect() call which instantiates ws
         self.ws = None
+
+    def start(self):
         self.connect()
-        # Send connection token right after connected!
-        self.send_connection_token()
         # Start the read thread (receive data loop)
         self.thread = threading.Thread(name='SessionReadThread', target=self.recv_loop)
         self.thread.start()
@@ -45,6 +42,7 @@ class session:
                 if self.ws.connected:
                     data = self.ws.recv()
                     self.data_in.append(data)
+                    print(self.data_in)
                 else:
                     print('Could not receive data because there is no websocket connection!')
                     return
@@ -81,26 +79,3 @@ class session:
                 print('The input byte array is empty!')
         else:
             print('Tried to read byte with no connection!')
-
-    # Specifically passes socket arg because must send connection token immediately after connection?
-    def send_connection_token(self):
-        try:
-
-            # Opcode 254 - send protocol version - currently 5
-            self.main.packet.write_byte(254)
-            self.main.packet.write_int(5)
-            self.main.packet.flush_session(self)
-
-            # Opcode 255 - send game version
-            self.main.packet.write_byte(255)
-            self.main.packet.write_int(game_version)
-            self.main.packet.flush_session(self)
-
-            # Opcode 80 - connection token
-            self.main.packet.write_byte(80)
-            self.main.packet.write_string(self.token)
-            self.main.packet.flush_session(self)
-
-            print('Connection token sent!')
-        except Exception as ex:
-            print('Could not send connection token for reason: ' + str(ex))

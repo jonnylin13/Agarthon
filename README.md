@@ -12,16 +12,14 @@ I have pretty much no idea what I'm doing, this is my first personal project so 
 - pygame for Python 3.4.3
 
 # Usage
-- Just run agarthon.py
-- `python agarthon.py`
+- Just run run.py
+- `python run.py`
 
 # Todo
 
-- Create a buffer/packet class to read and write packets
-- Personally learn the struct class and how to pack/unpack
 - Create actual gameviewer/game class to display
-- Lots more
 
 # Done
 - Create an HTTP request to http://m.agar.io to retrieve server information
 - Create websocket connection + send connection token packet
+- Created methods for all client to server interactions

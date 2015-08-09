@@ -7,7 +7,6 @@ class packet:
     # Little Endian uses prefix <B
 
     def __init__(self, input=bytearray(), output=bytearray()):
-        print('Packet has been instantiated')
         self.input = input
         self.output = output
 
@@ -16,24 +15,24 @@ class packet:
         # thank you Gjum for this piece
         self.output += struct.pack('<B%iB' % (len(data)-1), *map(ord, data))
 
-    # Use to send opcodes too - write uint8
-    def write_byte(self, data):
+    # Use to send opcodes too - write byte
+    def write_uint8(self, data):
         self.output += struct.pack('<B', data)
 
-    # write uint16
-    def write_short(self, data):
+    # write short
+    def write_uint16(self, data):
         self.output += struct.pack('<h', data)
 
-    # write uint32
-    def write_int(self, data):
+    # write int
+    def write_uint32(self, data):
         self.output += struct.pack('<I', data)
 
-    # write float32
-    def write_float(self, data):
+    # write float
+    def write_float32(self, data):
         self.output += struct.pack('<f', data)
 
-    # write float64
-    def write_double(self, data):
+    # write double
+    def write_float64(self, data):
         self.output += struct.pack('<q', data)
 
     # write boolean uint8
@@ -43,32 +42,32 @@ class packet:
         else:
             self.output += struct.pack('<B', 0)
 
-    # return uint8 - unsigned 1 byte integer
-    def read_byte(self):
+    # return byte - unsigned 1 byte integer
+    def read_uint8(self):
         value, = struct.unpack('<B', self.input[:1])
         self.input = self.input[1:]
         return value
 
-    # return uint16 - unsigned 2 byte integer
-    def read_short(self):
+    # return short - unsigned 2 byte integer
+    def read_uint16(self):
         value, = struct.unpack('<h', self.input[:2])
         self.input = self.input[2:]
         return value
 
-    # return uint32 - unsigned 4 byte integer
-    def read_int(self):
+    # return int - unsigned 4 byte integer
+    def read_uint32(self):
         value, = struct.unpack('<I', self.input[:4])
         self.input = self.input[4:]
         return value
 
-    # return float32 - signed 4 byte floating point value
-    def read_float(self):
+    # return float - signed 4 byte floating point value
+    def read_float32(self):
         value, = struct.unpack('<f', self.input[:4])
         self.input = self.input[4:]
         return value
 
-    # return float64 - signed 8 byte floating point value
-    def read_double(self):
+    # return double - signed 8 byte floating point value
+    def read_float64(self):
         value, = struct.unpack('<q', self.input[:8])
         self.input = self.input[8:]
         return value
@@ -79,11 +78,27 @@ class packet:
         self.input = self.input[1:]
         return value
 
+    def read_string(self):
+        value = ''
+        while True:
+            if len(self.input) < 2:
+                break
+            char_byte = self.input[:2]
+            self.input = self.input[2:]
+            # byteorder = little endian
+            char_int = int.from_bytes(char_byte, byteorder='little')
+            char = chr(char_int)
+            value += char
+        return value
+
     def skip(self, size):
         self.input = self.input[size:]
 
     def read_session(self, session):
         self.input = session.read()
+
+    def clear_input(self):
+        self.input = []
 
     def flush_session(self, session):
         session.send(self.output)

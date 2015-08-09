@@ -1,12 +1,12 @@
 __author__ = 'jono'
 
-import requests, random, session, packet
+import requests, random, packet, client
 
 url = 'http://m.agar.io'
 gamemodes = ('ffa', 'party', 'experimental', 'teams')
 
 
-class main:
+class agarthon:
 
     def __init__ (self):
 
@@ -15,7 +15,9 @@ class main:
 
         self.packet = packet.packet()
 
-        self.session = session.session(self)
+        # Starts a client - change this in the future
+        self.client = client.client(self)
+        self.client.start()
 
     # Returns the server information ip:port\nauth_key
     def get_server_info(self):
@@ -55,6 +57,4 @@ class main:
     def get_gamemode(self):
         # For now just ffa
         return gamemodes[0]
-
-main()
 
