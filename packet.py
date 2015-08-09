@@ -2,7 +2,7 @@ __author__ = 'jono'
 
 import struct
 
-class packet:
+class Packet:
 
     # Little Endian uses prefix <B
 
@@ -12,7 +12,6 @@ class packet:
 
     # write null terminated utf-16 string
     def write_string(self, data):
-        # thank you Gjum for this piece
         self.output += struct.pack('<B%iB' % (len(data)-1), *map(ord, data))
 
     # Use to send opcodes too - write byte
@@ -78,18 +77,21 @@ class packet:
         self.input = self.input[1:]
         return value
 
-    def read_string(self):
-        value = ''
+    def read_str8(self):
+        string_arr = []
         while True:
-            if len(self.input) < 2:
-                break
-            char_byte = self.input[:2]
-            self.input = self.input[2:]
-            # byteorder = little endian
-            char_int = int.from_bytes(char_byte, byteorder='little')
-            char = chr(char_int)
-            value += char
-        return value
+            bytes = self.read_uint8()
+            if len(bytes) == 0: break
+            string_arr.append(chr(bytes))
+        return ''.join(string_arr)
+
+    def read_str16(self):
+        string_arr = []
+        while True:
+            bytes = self.read_uint16()
+            if len(bytes) == 0: break
+            string_arr.append(chr(bytes))
+        return ''.join(string_arr)
 
     def skip(self, size):
         self.input = self.input[size:]

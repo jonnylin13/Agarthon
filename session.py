@@ -2,7 +2,7 @@ __author__ = 'jono'
 
 import websocket, threading
 
-class session:
+class Session:
 
     def __init__(self, agarthon):
 
@@ -53,7 +53,7 @@ class session:
     def disconnect(self):
         self.thread.stop()
         self.ws.close()
-        self.is_connected = False
+        self.running = False
 
     # Send already formatted data
     def send(self, data):

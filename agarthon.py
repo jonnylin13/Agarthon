@@ -6,17 +6,17 @@ url = 'http://m.agar.io'
 gamemodes = ('ffa', 'party', 'experimental', 'teams')
 
 
-class agarthon:
+class Agarthon:
 
     def __init__ (self):
 
         self.regions = self.get_regions()
         self.server_info = self.get_server_info()
 
-        self.packet = packet.packet()
+        self.packet = packet.Packet()
 
         # Starts a client - change this in the future
-        self.client = client.client(self)
+        self.client = client.Client(self)
         self.client.start()
 
     # Returns the server information ip:port\nauth_key
