@@ -19,7 +19,7 @@ I have pretty much no idea what I'm doing, this is my first personal project so 
 
 - Work on GameView class to draw everything
 - Create Blob object - will create a dict of blobs in world class to keep track of ids + info
-- Work on World class 
+- Work on World class
 
 # Done
 - Create an HTTP request to http://m.agar.io to retrieve server information

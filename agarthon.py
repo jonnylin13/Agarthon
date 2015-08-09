@@ -15,11 +15,14 @@ class Agarthon:
 
         self.clients = {}
 
+        # Add a client for now
+        self.add_client()
+
     def add_client(self):
         # Starts a client - change this in the future
         client_id = len(self.clients.keys())
         c = client.Client(self, client_id)
-        self.c.start()
+        c.start()
         self.clients[c] = c
 
     def remove_client(self, id):
