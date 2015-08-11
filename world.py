@@ -2,9 +2,11 @@ __author__ = 'jono'
 
 import blob
 
+
 class World:
 
     def __init__(self):
+
         # Stores all blobs
         self.blobs = {}
         # Stores the ids of blobs that the player owns

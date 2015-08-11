@@ -4,17 +4,20 @@ import pygame
 
 caption = 'Agarthon by jonnylin13'
 
-import threading
+import world
 
 class GameView:
 
-    def __init__(self):
+    def __init__(self, agarthon):
 
         pygame.init()
         pygame.font.init()
         self.resolution = self.width, self.height = 800, 600
         self.display = pygame.display.set_mode(self.resolution)
         pygame.display.set_caption(caption)
+
+        self.world = world.World()
+        self.main = agarthon
 
         self.scoreboard = {}
         self.view_x = 0
@@ -49,10 +52,17 @@ class GameView:
                     game_exit = True
                     self.stop()
 
+            for blob in self.world.blobs:
+                self.draw_blob(blob)
+
             pygame.display.update()
 
     def draw_blob(self, blob):
-        pygame.draw.circle(self.display, (blob.red, blob.green, blob.blue), (blob.x, blob.x), blob.size)
+        pygame.draw.circle(self.display, (blob.red, blob.green, blob.blue), (blob.x, blob.y), blob.size)
+
+    # Parses the relative location of the blob
+    def parse_rel_location(self, x, y):
+        print()
 
     def draw_debug_line(self, line_x, line_y):
         print('Debug line wants to be drawn but the function hasnt been coded yet!')

@@ -20,8 +20,8 @@ class Client:
         self.packet = packet.Packet()
         self.session = session.Session(self.main)
         self.session.start()
-        self.world = world.World()
-        self.gameview = gameview.GameView()
+        self.gameview = gameview.GameView(self.main)
+        self.gameview.start()
 
     def is_connected(self):
         return self.is_connected()
@@ -144,6 +144,7 @@ class Client:
         min_y = self.packet.read_float64()
         max_x = self.packet.read_float64()
         max_y = self.packet.read_float64()
+        self.gameview.update_game_size(min_x, min_y, max_x, max_y)
 
 
     # Specifically passes socket arg because must send connection token immediately after connection?
