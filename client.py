@@ -1,16 +1,13 @@
 __author__ = 'jono'
 
 import session, world, gameview, packet
-# Needed for game_version reconnect opcode 255
-game_version = 154669603
-protocol_version = 5
+import constants
 
 c2s_opcodes = {'protocol_handshake':254, 'game_version_handshake':255, 'token':80,
                'set_nickname':0, 'spectate':1, 'mouse_move':16, 'split':17, 'q_pressed':18,
                'q_released':19, 'eject_mass':21}
 s2c_opcodes = {16:'world_update', 17:'view_update', 20:'reset', 21:'draw_debug_line', 32:'owns_blob',
                'ffa_leaderboard':49, 'game_area_size':64, 'blob_experience_info':81}
-
 
 class Client:
 
@@ -153,12 +150,12 @@ class Client:
 
             # send protocol version
             self.packet.write_uint8(c2s_opcodes['protocol_handshake'])
-            self.packet.write_uint32(protocol_version)
+            self.packet.write_uint32(constants.protocol_version)
             self.packet.flush_session(self.session)
 
             # send game version
             self.packet.write_uint8(c2s_opcodes['game_version_handshake'])
-            self.packet.write_uint32(game_version)
+            self.packet.write_uint32(constants.game_version)
             self.packet.flush_session(self.session)
 
             # send connection token

@@ -1,15 +1,19 @@
+#! python3
+# Agarthon
+# Main class
+
 __author__ = 'jono'
 
-import requests, random, client
-
-url = 'http://m.agar.io'
-gamemodes = ('ffa', 'party', 'experimental', 'teams')
-
+import requests, random, client, constants
 
 class Agarthon:
 
+
     def __init__ (self):
 
+        print('Starting Agarthon...')
+
+        self.info = self.get_info()
         self.regions = self.get_regions()
         self.server_info = self.get_server_info()
 
@@ -29,42 +33,52 @@ class Agarthon:
         self.clients[id].stop()
         del(self.client[id])
 
+    def get_info(self):
+        r = None
+        info = None
+        try:
+            r = requests.get(constants.url + '/info')
+            info = r.json()
+        except Exception as ex:
+            print('Could not fetch info: ' + str(ex))
+        print('Fetched info...')
+        return info
+
     # Returns the server information ip:port\nauth_key
     def get_server_info(self):
         r = None
         try:
-            r = requests.post(url, data=self.get_best_region())
-            print('Received server info: ' + r.text)
+            data_str = '{0}{2}{3}'.format(self.get_best_region(), '\n', constants.game_version)
+            print('Posting with data_str: \n' + data_str)
+            r = requests.post(constants.url, data=data_str)
+            print('Fetched server info: ' + r.text)
         except Exception as ex:
-            print('Could not retrieve server info: ' +str(ex))
+            print('Could not fetch server info: ' + str(ex))
         return r.text.split('\n')
 
     # Returns all game server regions
     def get_regions(self):
-        r = None
-        info = None
-        try:
-            r = requests.get(url + '/info')
-            info = r.json()
-        except Exception as ex:
-            print('Could not retrieve regions: ' + str(ex))
-        return info['regions'].keys()
+        return list(self.info['regions'])
 
-    # Hacky method of getting region, this absolutely needs to be changed!
+    # OK for now
     def get_best_region(self):
         r = None
         try:
-            r = requests.get(url.replace('m', 'gc'))
+            r = requests.get(constants.url.replace('m', 'gc'))
             user_region = r.text.split(' ')
+            
             for region in self.regions:
-                if user_region[0] in region:
+                if user_region[0].split('-')[0] in region:
+                    print('Using region ' + region + '...')
                     return region
         except Exception as ex:
-            print('Could not get best region: ' + str(ex))
-            return random.choice(self.regions)
+            print('Could not determine best region: ' + str(ex))
+        rand_region = random.choice(self.regions)
+        print('Using region ' + rand_region + '...')
+        return rand_region
 
     # Set input for gamemode here
     def get_gamemode(self):
         # For now just ffa
-        return gamemodes[0]
+        return constants.gamemodes[0]
 
